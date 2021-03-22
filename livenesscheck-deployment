@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: liveness-deployment
+  labels:
+    app: nginx
+spec:    
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: liveness
+        image: nginx
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - /diskcheck/check.sh
+          initialDelaySeconds: 20
+          periodSeconds: 30
+        volumeMounts:
+          - mountPath: "/diskcheck"
+            name:  diskcheck
+      volumes:
+      - name: diskcheck
+        emptyDir: {}
+      initContainers:
+      - name: init-diskscript
+        image: busybox:1.28
+        command: ['sh', '-c', "cd /diskcheck && wget https://gist.githubusercontent.com/KesslerMike/60fac048d027474d62998816c10f4afb/raw/953464ff37702eed284a92074c53e6372d2a2a6b/check.sh && chmod +x /diskcheck/check.sh"]
+        volumeMounts:
+          - mountPath: "/diskcheck"
+            name:  diskcheck    
