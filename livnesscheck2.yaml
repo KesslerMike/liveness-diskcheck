@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+spec:
+  containers:
+  - name: liveness
+    image: nginx
+    livenessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - /diskcheck/check.sh
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    volumeMounts:
+      - mountPath: "/diskcheck"
+        name:  diskcheck
+  volumes:
+  - name: diskcheck
+    emptyDir: {}
+  initContainers:
+  - name: init-diskscript
+    image: busybox:1.28
+    command: ['sh', '-c', "cd /diskcheck && wget https://gist.githubusercontent.com/KesslerMike/60fac048d027474d62998816c10f4afb/raw/953464ff37702eed284a92074c53e6372d2a2a6b/check.sh && chmod +x /diskcheck/check.sh"]
+    volumeMounts:
+      - mountPath: "/diskcheck"
+        name:  diskcheck  
